@@ -10,11 +10,10 @@ st.set_page_config(
     layout="wide"
 )
 
+@st.cache_data(ttl=3600)  # Cache for 1 hour
 def fetch_eia_news():
     # Fetch RSS feed
     feed_url = "https://www.eia.gov/rss/todayinenergy.xml"
-    feed = feedparser.parse(feed_url)
-    return feed
 
 def format_date(date_str):
     # Parse the date string to datetime object
