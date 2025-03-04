@@ -12,8 +12,16 @@ st.set_page_config(
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def fetch_eia_news():
-    # Fetch RSS feed
-    feed_url = "https://www.eia.gov/rss/todayinenergy.xml"
+    try:
+        feed_url = "https://www.eia.gov/rss/todayinenergy.xml"
+        feed = feedparser.parse(feed_url)
+        if feed.status != 200:
+            st.error("Unable to fetch news feed. Please try again later.")
+            return None
+        return feed
+    except Exception as e:
+        st.error(f"Error fetching news feed: {str(e)}")
+        return None
 
 def format_date(date_str):
     # Parse the date string to datetime object
@@ -25,21 +33,20 @@ def format_date(date_str):
     return dt.strftime('%B %d, %Y')
 
 def main():
-    # Add header
     st.title("🔋 EIA Today in Energy News")
-    st.markdown("Latest news and updates from the U.S. Energy Information Administration")
     
-    # Fetch news
-    feed = fetch_eia_news()
-    
-    # Display news items
-    for entry in feed.entries:
-        with st.container():
-            st.subheader(entry.title)
-            st.markdown(f"*Published on {format_date(entry.published)}*")
-            st.write(entry.summary)
-            st.markdown(f"[Read more]({entry.link})")
-            st.divider()
+    with st.spinner("Fetching latest energy news..."):
+        feed = fetch_eia_news()
+        
+    if feed:
+        # Display news items
+        for entry in feed.entries:
+            with st.container():
+                st.subheader(entry.title)
+                st.markdown(f"*Published on {format_date(entry.published)}*")
+                st.write(entry.summary)
+                st.markdown(f"[Read more]({entry.link})")
+                st.divider()
 
 if __name__ == "__main__":
-    main()
+    main() 
