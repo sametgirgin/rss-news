@@ -24,11 +24,23 @@ def fetch_eia_news():
         return None
 
 def format_date(date_str):
-    # Parse the date string to datetime object
-    dt = datetime.strptime(date_str, '%a, %d %b %Y %H:%M:%S %Z')
+    try:
+        # First try the format with timezone name
+        dt = datetime.strptime(date_str, '%a, %d %b %Y %H:%M:%S %z')
+    except ValueError:
+        try:
+            # Try format without timezone
+            dt = datetime.strptime(date_str, '%a, %d %b %Y %H:%M:%S')
+        except ValueError:
+            # If both fail, return the original string
+            return date_str
+    
     # Convert to US Eastern timezone
     eastern = pytz.timezone('US/Eastern')
-    dt = eastern.localize(dt)
+    if dt.tzinfo is None:
+        # If the datetime has no timezone, assume UTC
+        dt = pytz.UTC.localize(dt)
+    dt = dt.astimezone(eastern)
     # Format date
     return dt.strftime('%B %d, %Y')
 
